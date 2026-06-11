@@ -1,0 +1,17 @@
+{
+  "name": "酒店民宿长图编辑器",
+  "short_name": "长图编辑器",
+  "description": "用于制作酒店和民宿宣传长图的模块化在线编辑工具",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#eef1ef",
+  "theme_color": "#315d68",
+  "icons": [
+    {
+      "src": "./app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

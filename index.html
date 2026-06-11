@@ -1,0 +1,2392 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="可自由编辑酒店与民宿宣传长图的模块化在线工具">
+  <meta name="theme-color" content="#315d68">
+  <title>酒店民宿长图文模板</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <style>
+    :root {
+      --paper: #fbfaf7;
+      --ink: #282b2b;
+      --muted: #74736d;
+      --line: #e7e0d5;
+      --accent: #315d68;
+      --accent-2: #b66a45;
+      --soft: #f0e8dc;
+      --panel: #ffffff;
+      --shadow: 0 18px 50px rgba(28, 35, 38, .14);
+      color-scheme: light;
+      font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: #eef1ef;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 310px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    .controls {
+      position: sticky;
+      top: 0;
+      align-self: start;
+      height: 100vh;
+      overflow: auto;
+      padding: 20px;
+      background: #f8f7f3;
+      border-right: 1px solid #dedbd2;
+    }
+
+    .brand {
+      margin: 0 0 18px;
+      font-size: 20px;
+      line-height: 1.25;
+      letter-spacing: 0;
+    }
+
+    .hint {
+      margin: 0 0 18px;
+      color: #696c68;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .group {
+      padding: 14px 0;
+      border-top: 1px solid #e5e1d8;
+    }
+
+    .group label {
+      display: block;
+      margin: 0 0 7px;
+      color: #4a4c49;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    input, select, textarea, button {
+      font: inherit;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid #d8d2c8;
+      border-radius: 8px;
+      padding: 10px 11px;
+      background: #fff;
+      color: var(--ink);
+      outline: none;
+    }
+
+    textarea {
+      min-height: 86px;
+      resize: vertical;
+      line-height: 1.55;
+    }
+
+    .segmented {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+
+    .segmented.two {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .segmented button,
+    .actions button {
+      border: 1px solid #d6d0c6;
+      border-radius: 8px;
+      background: #fff;
+      color: #333;
+      padding: 9px 8px;
+      cursor: pointer;
+    }
+
+    .segmented button.active {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .swatches {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .swatch {
+      min-height: 42px;
+      border: 1px solid rgba(0, 0, 0, .12);
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .swatch.active {
+      outline: 3px solid rgba(49, 93, 104, .25);
+      outline-offset: 2px;
+    }
+
+    .actions {
+      display: grid;
+      gap: 8px;
+    }
+
+    .actions button.primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .save-status {
+      min-height: 18px;
+      color: #777a75;
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .mobile-panel-toggle {
+      display: none;
+      position: fixed;
+      left: 14px;
+      bottom: 14px;
+      z-index: 100;
+      width: 48px;
+      height: 48px;
+      border: 0;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, .24);
+      cursor: pointer;
+    }
+
+    .mobile-panel-toggle span {
+      display: block;
+      width: 20px;
+      height: 2px;
+      margin: 4px auto;
+      background: currentColor;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      z-index: 200;
+      max-width: min(420px, calc(100vw - 40px));
+      padding: 10px 16px;
+      border-radius: 8px;
+      background: rgba(29, 34, 34, .92);
+      color: #fff;
+      font-size: 13px;
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-50%, 12px);
+      transition: opacity .18s ease, transform .18s ease;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+    .stage {
+      min-width: 0;
+      padding: 38px 20px 70px;
+      overflow: auto;
+    }
+
+    .poster-wrap {
+      width: min(640px, 100%);
+      margin: 0 auto;
+      box-shadow: var(--shadow);
+      background: var(--paper);
+    }
+
+    .poster {
+      width: 640px;
+      min-height: 4200px;
+      transform-origin: top center;
+      background: var(--paper);
+      overflow: hidden;
+    }
+
+    .poster.theme-natural {
+      --accent: #47782e;
+      --accent-2: #87b936;
+      --paper: #f8f8e9;
+      --line: #dbe3bd;
+      background:
+        repeating-linear-gradient(135deg, transparent 0 72px, rgba(80, 115, 58, .035) 72px 74px),
+        var(--paper);
+    }
+
+    .poster.theme-natural .map-band {
+      background: linear-gradient(180deg, #315b4c, #19463e);
+    }
+
+    .poster.theme-natural .section:nth-of-type(3n) {
+      background: linear-gradient(180deg, transparent, rgba(132, 184, 55, .08), transparent);
+    }
+
+    .poster.theme-natural .photo {
+      --photo-radius: 2px;
+    }
+
+    .poster.theme-urban {
+      --accent: #624277;
+      --accent-2: #2d7d91;
+      --paper: #fff;
+      --line: #e5ddeb;
+      background:
+        linear-gradient(90deg, transparent 0 38px, rgba(98, 66, 119, .05) 38px 39px, transparent 39px),
+        #fff;
+    }
+
+    .poster.theme-urban .section {
+      border-left: 1px solid rgba(98, 66, 119, .18);
+      margin-left: 36px;
+      padding-left: 38px;
+    }
+
+    .poster.theme-urban .map-band {
+      background: #624277;
+    }
+
+    .poster.theme-urban .photo {
+      --photo-radius: 10px;
+    }
+
+    .poster.theme-urban .section-kicker,
+    .poster.theme-urban .num {
+      color: #624277;
+    }
+
+    [contenteditable="true"] {
+      outline: 1px dashed transparent;
+      border-radius: 3px;
+    }
+
+    [contenteditable="true"]:focus {
+      outline-color: rgba(49, 93, 104, .45);
+      background: rgba(255, 255, 255, .45);
+    }
+
+    .photo {
+      position: relative;
+      overflow: hidden;
+      min-height: 72px;
+      border-radius: var(--photo-radius, 0);
+      background:
+        linear-gradient(135deg, rgba(49, 93, 104, .22), rgba(182, 106, 69, .16)),
+        linear-gradient(180deg, #dfe7df, #f5efe7);
+      cursor: pointer;
+    }
+
+    .photo::before {
+      content: attr(data-label);
+      position: absolute;
+      inset: auto 14px 12px;
+      z-index: 1;
+      color: rgba(255, 255, 255, .95);
+      font-size: 13px;
+      text-shadow: 0 1px 5px rgba(0, 0, 0, .28);
+    }
+
+    .photo::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 24% 27%, rgba(255,255,255,.38), transparent 12%),
+        linear-gradient(140deg, transparent 0 42%, rgba(255,255,255,.24) 42% 44%, transparent 44%),
+        linear-gradient(28deg, rgba(43, 82, 72, .5) 0 27%, transparent 27%),
+        linear-gradient(335deg, rgba(166, 124, 73, .45) 0 31%, transparent 31%);
+      mix-blend-mode: multiply;
+    }
+
+    .photo img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: var(--photo-fit, cover);
+      object-position: var(--photo-x, 50%) var(--photo-y, 50%);
+      z-index: 2;
+    }
+
+    .photo.is-selected-photo {
+      outline: 3px solid var(--accent-2);
+      outline-offset: 4px;
+      z-index: 4;
+    }
+
+    .editable-element {
+      transform: rotate(var(--element-rotate, 0deg));
+      opacity: var(--element-opacity, 1);
+    }
+
+    .resize-handle {
+      display: none;
+      position: absolute;
+      right: -7px;
+      bottom: -7px;
+      z-index: 20;
+      width: 16px;
+      height: 16px;
+      border: 2px solid #fff;
+      border-radius: 50%;
+      background: var(--accent-2);
+      box-shadow: 0 1px 5px rgba(0, 0, 0, .25);
+      cursor: nwse-resize;
+    }
+
+    .free-canvas .is-selected-photo .resize-handle,
+    .decoration.is-selected-element .resize-handle {
+      display: block;
+    }
+
+    .photo.shape-square,
+    .photo.shape-wide,
+    .photo.shape-portrait,
+    .photo.shape-circle {
+      height: auto !important;
+      aspect-ratio: var(--photo-aspect, 1 / 1);
+    }
+
+    .photo.shape-circle {
+      border-radius: 999px;
+      aspect-ratio: 1 / 1;
+    }
+
+    .photo[data-custom-height] {
+      height: var(--photo-h) !important;
+    }
+
+    .eyebrow {
+      color: var(--accent-2);
+      font-size: 12px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+
+    .serif {
+      font-family: Georgia, "Times New Roman", "Songti SC", "SimSun", serif;
+    }
+
+    .center { text-align: center; }
+    .fine { color: var(--muted); font-size: 13px; line-height: 1.9; }
+    .rule { width: 58px; height: 1px; margin: 20px auto; background: var(--line); }
+
+    .section {
+      padding: 62px 56px 0;
+    }
+
+    .section,
+    .intro,
+    .quote,
+    .map-band {
+      position: relative;
+    }
+
+    .is-selected-block {
+      outline: 2px dashed rgba(49, 93, 104, .5);
+      outline-offset: -8px;
+    }
+
+    .poster.is-previewing .is-selected-block,
+    .poster.is-previewing .is-selected-photo {
+      outline: none;
+    }
+
+    .poster.is-previewing .resize-handle {
+      display: none;
+    }
+
+    .poster.is-previewing .layout-free {
+      background-image: none;
+    }
+
+    .section-title {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.2;
+      letter-spacing: .08em;
+    }
+
+    .section-kicker {
+      margin: 8px 0 18px;
+      color: var(--accent);
+      font-size: 11px;
+      letter-spacing: .2em;
+    }
+
+    .lead {
+      margin: 0;
+      color: #676762;
+      font-size: 14px;
+      line-height: 2;
+    }
+
+    .hero {
+      position: relative;
+      height: 760px;
+      color: #fff;
+    }
+
+    .hero .photo {
+      position: absolute;
+      inset: 0;
+    }
+
+    .hero .photo::after {
+      background:
+        linear-gradient(180deg, rgba(16, 25, 32, .12), rgba(16, 25, 32, .36)),
+        radial-gradient(circle at 20% 18%, rgba(255,255,255,.35), transparent 11%),
+        linear-gradient(28deg, rgba(40, 86, 70, .52) 0 30%, transparent 30%),
+        linear-gradient(335deg, rgba(165, 95, 61, .56) 0 29%, transparent 29%);
+      mix-blend-mode: normal;
+    }
+
+    .hero-copy {
+      position: absolute;
+      left: 52px;
+      right: 52px;
+      bottom: 54px;
+      z-index: 3;
+      text-shadow: 0 2px 16px rgba(0,0,0,.28);
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: 48px;
+      line-height: 1.12;
+      letter-spacing: .08em;
+      font-weight: 500;
+    }
+
+    .hero p {
+      width: 78%;
+      margin: 18px 0 0;
+      font-size: 15px;
+      line-height: 1.9;
+    }
+
+    .intro {
+      padding: 50px 58px 26px;
+      background: #fff;
+    }
+
+    .intro h2 {
+      margin: 0;
+      font-size: 26px;
+      line-height: 1.35;
+      font-weight: 500;
+      letter-spacing: .08em;
+    }
+
+    .intro .meta {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 28px;
+      padding-top: 15px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin-top: 28px;
+    }
+
+    .split .photo { height: 250px; }
+
+    .wide-photo {
+      height: 330px;
+      margin-top: 28px;
+    }
+
+    .caption {
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.65;
+      letter-spacing: .08em;
+    }
+
+    .feature-block {
+      display: grid;
+      grid-template-columns: 78px 1fr;
+      gap: 22px;
+      align-items: start;
+      margin-top: 24px;
+    }
+
+    .num {
+      color: var(--accent);
+      font-size: 25px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .feature-block h3 {
+      margin: 0 0 10px;
+      font-size: 22px;
+      letter-spacing: .1em;
+      font-weight: 500;
+    }
+
+    .feature-block p {
+      margin: 0;
+      color: #666864;
+      font-size: 13px;
+      line-height: 1.95;
+    }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    .gallery .photo { height: 148px; }
+
+    .gallery.cols-2 { grid-template-columns: repeat(2, 1fr); }
+    .gallery.cols-4 { grid-template-columns: repeat(4, 1fr); }
+
+    .layout-gallery {
+      display: grid;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .layout-single { grid-template-columns: 1fr; }
+    .layout-two { grid-template-columns: repeat(2, 1fr); }
+    .layout-three { grid-template-columns: repeat(3, 1fr); }
+    .layout-grid { grid-template-columns: repeat(2, 1fr); }
+
+    .layout-feature-left {
+      grid-template-columns: 1.25fr .75fr;
+      grid-auto-rows: 150px;
+    }
+
+    .layout-feature-left .photo:first-child {
+      grid-row: span 2;
+    }
+
+    .layout-feature-top {
+      grid-template-columns: repeat(2, 1fr);
+      grid-auto-rows: 150px;
+    }
+
+    .layout-feature-top .photo:first-child {
+      grid-column: 1 / -1;
+      height: 300px;
+    }
+
+    .layout-circle {
+      grid-template-columns: repeat(3, 1fr);
+      align-items: center;
+    }
+
+    .layout-circle .photo {
+      height: auto !important;
+      aspect-ratio: 1 / 1;
+      border-radius: 999px;
+    }
+
+    .layout-gallery .photo {
+      min-width: 0;
+      height: 190px;
+    }
+
+    .layout-single .photo {
+      height: 330px;
+    }
+
+    .layout-free {
+      position: relative;
+      display: block;
+      height: var(--free-height, 560px);
+      min-height: 300px;
+      overflow: hidden;
+      background-image:
+        linear-gradient(rgba(49, 93, 104, .05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(49, 93, 104, .05) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+
+    .layout-free .photo {
+      position: absolute;
+      width: 44%;
+      height: 210px;
+      margin: 0;
+      touch-action: none;
+      cursor: move;
+    }
+
+    .layout-free .photo:nth-child(1) { left: 0; top: 10px; }
+    .layout-free .photo:nth-child(2) { right: 0; top: 70px; }
+    .layout-free .photo:nth-child(3) { left: 12%; top: 250px; }
+    .layout-free .photo:nth-child(4) { right: 7%; top: 310px; }
+    .layout-free .photo:nth-child(n+5) { left: 28%; top: 150px; }
+
+    .decoration-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 8;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .decoration {
+      position: absolute;
+      z-index: 8;
+      color: var(--accent);
+      border-color: currentColor;
+      pointer-events: auto;
+      touch-action: none;
+      cursor: move;
+    }
+
+    .decoration.is-selected-element {
+      outline: 2px dashed var(--accent-2);
+      outline-offset: 4px;
+    }
+
+    .decoration-line {
+      width: 160px;
+      height: 3px;
+      background: currentColor;
+    }
+
+    .decoration-circle {
+      width: 96px;
+      height: 96px;
+      border: 3px solid currentColor;
+      border-radius: 50%;
+    }
+
+    .decoration-label {
+      width: 74px;
+      min-height: 38px;
+      padding: 7px 9px;
+      border: 1px solid currentColor;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .82);
+      font: 700 13px/1.6 Georgia, serif;
+      text-align: center;
+    }
+
+    .decoration-leaf {
+      width: 84px;
+      height: 58px;
+      border-bottom: 2px solid currentColor;
+    }
+
+    .decoration-leaf::before,
+    .decoration-leaf::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      width: 35px;
+      height: 24px;
+      border: 2px solid currentColor;
+      border-bottom: 0;
+      border-radius: 80% 20% 0 0;
+    }
+
+    .decoration-leaf::before {
+      left: 7px;
+      transform: rotate(18deg);
+    }
+
+    .decoration-leaf::after {
+      right: 7px;
+      transform: scaleX(-1) rotate(18deg);
+    }
+
+    .block-bg-fade {
+      background: linear-gradient(180deg, transparent, var(--block-bg, #fff) 18%, var(--block-bg, #fff) 82%, transparent);
+    }
+
+    .block-bg-band {
+      background: linear-gradient(180deg, var(--accent) 0 82px, var(--block-bg, #fff) 82px);
+    }
+
+    .block-bg-solid {
+      background: var(--block-bg, #fff);
+    }
+
+    .dynamic-note {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.7;
+      text-align: center;
+    }
+
+    .room-card {
+      display: grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap: 16px;
+      align-items: stretch;
+      margin-top: 28px;
+    }
+
+    .room-card .photo.big { height: 300px; }
+    .room-card .stack {
+      display: grid;
+      gap: 12px;
+    }
+    .room-card .stack .photo { height: 144px; }
+
+    .amenities {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-top: 28px;
+    }
+
+    .amenity {
+      min-height: 74px;
+      padding: 15px 8px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, .58);
+      text-align: center;
+      font-size: 12px;
+      line-height: 1.45;
+      color: #5d605c;
+    }
+
+    .quote {
+      margin: 48px 56px 0;
+      padding: 34px 30px;
+      background: #fff;
+      border-top: 3px solid var(--accent);
+      text-align: center;
+    }
+
+    .quote p {
+      margin: 0;
+      color: #50524f;
+      font-size: 15px;
+      line-height: 2;
+    }
+
+    .map-band {
+      margin-top: 32px;
+      padding: 34px 56px;
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .map-band h3 {
+      margin: 0 0 14px;
+      font-size: 22px;
+      letter-spacing: .1em;
+      font-weight: 500;
+    }
+
+    .map-band p {
+      margin: 0;
+      opacity: .86;
+      font-size: 13px;
+      line-height: 1.9;
+    }
+
+    .footer {
+      padding: 56px 56px 70px;
+      text-align: center;
+    }
+
+    .footer h2 {
+      margin: 0;
+      font-size: 28px;
+      letter-spacing: .12em;
+      font-weight: 500;
+    }
+
+    .footer p {
+      margin: 18px auto 0;
+      max-width: 420px;
+    }
+
+    .template-magazine .hero {
+      height: 710px;
+    }
+
+    .template-magazine .hero-copy {
+      top: 74px;
+      bottom: auto;
+      width: 260px;
+    }
+
+    .template-magazine .hero h1 {
+      writing-mode: vertical-rl;
+      font-size: 38px;
+      line-height: 1.35;
+      letter-spacing: .16em;
+    }
+
+    .template-magazine .intro {
+      padding-top: 42px;
+    }
+
+    .template-magazine .section:nth-of-type(even) {
+      background: #fff;
+      padding-bottom: 42px;
+    }
+
+    .template-magazine .feature-block {
+      grid-template-columns: 1fr 98px;
+    }
+
+    .template-magazine .num {
+      grid-column: 2;
+      grid-row: 1;
+      text-align: right;
+    }
+
+    .template-magazine .feature-block div:last-child {
+      grid-column: 1;
+      grid-row: 1;
+    }
+
+    .template-guide .poster {
+      background:
+        linear-gradient(90deg, transparent 0 72px, rgba(49,93,104,.08) 72px 73px, transparent 73px),
+        var(--paper);
+    }
+
+    .template-guide .hero {
+      height: 560px;
+    }
+
+    .template-guide .hero-copy {
+      left: 72px;
+      right: 72px;
+      bottom: 46px;
+    }
+
+    .template-guide .hero h1 {
+      font-size: 40px;
+    }
+
+    .template-guide .section {
+      padding-left: 72px;
+      padding-right: 52px;
+    }
+
+    .template-guide .wide-photo {
+      height: 280px;
+    }
+
+    .template-guide .room-card {
+      grid-template-columns: 1fr;
+    }
+
+    .template-guide .room-card .photo.big {
+      height: 292px;
+    }
+
+    .template-guide .room-card .stack {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .hidden-input {
+      position: fixed;
+      inset: auto auto 0 0;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    body.preview-mode {
+      width: 640px;
+      min-width: 640px;
+      background: var(--paper);
+      overflow-x: hidden;
+    }
+
+    body.preview-mode .controls {
+      display: none;
+    }
+
+    body.preview-mode .app {
+      display: block;
+      width: 640px;
+      min-height: auto;
+    }
+
+    body.preview-mode .stage {
+      width: 640px;
+      padding: 0;
+      overflow: visible;
+    }
+
+    body.preview-mode .poster-wrap {
+      width: 640px;
+      margin: 0;
+      box-shadow: none;
+    }
+
+    body.preview-mode .resize-handle,
+    body.preview-mode .layout-free {
+      background-image: none;
+    }
+
+    @media (max-width: 980px) {
+      .app {
+        display: block;
+        min-height: 100vh;
+      }
+      .controls {
+        position: fixed;
+        inset: 0 auto 0 0;
+        z-index: 90;
+        width: min(360px, 92vw);
+        height: 100vh;
+        border-right: 1px solid #dedbd2;
+        border-bottom: 0;
+        box-shadow: 14px 0 36px rgba(0, 0, 0, .18);
+        transform: translateX(-105%);
+        transition: transform .2s ease;
+      }
+      body.mobile-panel-open .controls {
+        transform: translateX(0);
+      }
+      .mobile-panel-toggle {
+        display: block;
+      }
+      body.mobile-panel-open .mobile-panel-toggle {
+        left: min(374px, calc(92vw + 14px));
+      }
+      .stage {
+        padding: 18px 0 80px;
+      }
+      .poster {
+        transform: scale(var(--poster-scale, 1));
+      }
+      .poster-wrap {
+        height: calc(var(--poster-height, 4200px) * var(--poster-scale, 1));
+        overflow: hidden;
+      }
+    }
+
+    @media print {
+      body { background: #fff; }
+      .controls { display: none; }
+      .app { display: block; }
+      .stage { padding: 0; }
+      .poster-wrap { width: 640px; margin: 0; box-shadow: none; }
+      .poster { transform: none; }
+    }
+  </style>
+</head>
+<body>
+  <button class="mobile-panel-toggle" id="mobilePanelToggle" type="button" aria-label="打开或关闭编辑面板">
+    <span></span><span></span><span></span>
+  </button>
+  <div class="app">
+    <aside class="controls" aria-label="模板设置">
+      <h1 class="brand">酒店民宿长图文模板</h1>
+      <p class="hint">右侧文字可直接编辑。选择“自由拼贴”后可拖动图片，拖右下角控制点缩放；板块、图片和装饰元素均可增减。</p>
+
+      <div class="group">
+        <label>整体主题</label>
+        <div class="segmented two" data-theme-picker>
+          <button class="active" type="button" data-theme="theme-natural">田园自然</button>
+          <button type="button" data-theme="theme-urban">城市人文</button>
+        </div>
+      </div>
+
+      <div class="group">
+        <label>标题版式</label>
+        <div class="segmented" data-template-picker>
+          <button class="active" type="button" data-template="template-story">诗意</button>
+          <button type="button" data-template="template-magazine">杂志</button>
+          <button type="button" data-template="template-guide">导览</button>
+        </div>
+      </div>
+
+      <div class="group">
+        <label>色调</label>
+        <div class="swatches" data-palette-picker>
+          <button class="swatch active" type="button" title="茶绿暮橙" data-palette="#315d68,#b66a45,#fbfaf7" style="background:linear-gradient(135deg,#315d68 0 50%,#b66a45 50% 72%,#fbfaf7 72%)"></button>
+          <button class="swatch" type="button" title="竹青米白" data-palette="#426b4f,#9a7f4f,#fcfbf4" style="background:linear-gradient(135deg,#426b4f 0 50%,#9a7f4f 50% 72%,#fcfbf4 72%)"></button>
+          <button class="swatch" type="button" title="湖蓝陶红" data-palette="#2e6474,#c05d4f,#f7f8f6" style="background:linear-gradient(135deg,#2e6474 0 50%,#c05d4f 50% 72%,#f7f8f6 72%)"></button>
+          <button class="swatch" type="button" title="墨灰金茶" data-palette="#343a3a,#b8894f,#faf8f2" style="background:linear-gradient(135deg,#343a3a 0 50%,#b8894f 50% 72%,#faf8f2 72%)"></button>
+        </div>
+      </div>
+
+      <div class="group">
+        <label for="hotelName">名称</label>
+        <input id="hotelName" type="text" value="莳光山居">
+      </div>
+
+      <div class="group">
+        <label for="slogan">主标语</label>
+        <textarea id="slogan">住进山水之间，把日子过慢一点</textarea>
+      </div>
+
+      <div class="group">
+        <label for="location">地点信息</label>
+        <input id="location" type="text" value="浙江湖州 · 山野度假民宿">
+      </div>
+
+      <div class="group actions">
+        <label>板块增减</label>
+        <button type="button" data-add-block="text">新增图文板块</button>
+        <button type="button" data-add-block="gallery">新增多图板块</button>
+        <button type="button" data-add-block="room">新增客房板块</button>
+        <button type="button" id="moveBlockUp">选中板块上移</button>
+        <button type="button" id="moveBlockDown">选中板块下移</button>
+        <button type="button" id="duplicateBlock">复制选中板块</button>
+        <button type="button" id="deleteBlock">删除选中板块</button>
+        <label for="blockLayout">板块图片布局</label>
+        <select id="blockLayout">
+          <option value="single">单图通栏</option>
+          <option value="two">左右双图</option>
+          <option value="three">三列图片</option>
+          <option value="grid">四宫格</option>
+          <option value="feature-left">左大右小</option>
+          <option value="feature-top">上大下双图</option>
+          <option value="circle">圆形组合</option>
+          <option value="free">自由拼贴</option>
+        </select>
+        <label for="blockSpacing">板块上下留白</label>
+        <input id="blockSpacing" type="range" min="20" max="120" value="62">
+        <label for="freeCanvasHeight">拼贴画布高度</label>
+        <input id="freeCanvasHeight" type="range" min="300" max="1000" value="560">
+        <label for="blockBackground">板块背景色</label>
+        <input id="blockBackground" type="color" value="#ffffff">
+        <label for="blockBackgroundStyle">板块背景样式</label>
+        <select id="blockBackgroundStyle">
+          <option value="solid">纯色</option>
+          <option value="fade">上下渐隐</option>
+          <option value="band">主题色带</option>
+          <option value="none">透明</option>
+        </select>
+      </div>
+
+      <div class="group actions">
+        <label>图片编辑</label>
+        <button type="button" id="addPhoto">给选中板块加图片</button>
+        <button type="button" id="addPhotos">批量添加图片</button>
+        <button type="button" id="replacePhoto">替换选中图片</button>
+        <button type="button" id="deletePhoto">删除选中图片</button>
+        <label for="photoWidth">图片宽度</label>
+        <input id="photoWidth" type="range" min="30" max="100" value="100">
+        <label for="photoHeight">图片高度</label>
+        <input id="photoHeight" type="range" min="90" max="620" value="220">
+        <label for="photoRadius">图片圆角</label>
+        <input id="photoRadius" type="range" min="0" max="120" value="0">
+        <label for="photoShape">图片形状</label>
+        <select id="photoShape">
+          <option value="custom">自定义矩形</option>
+          <option value="square">正方形</option>
+          <option value="wide">横版 16:9</option>
+          <option value="portrait">竖版 3:4</option>
+          <option value="circle">圆形</option>
+        </select>
+        <label for="photoFit">图片填充</label>
+        <select id="photoFit">
+          <option value="cover">铺满裁切</option>
+          <option value="contain">完整显示</option>
+        </select>
+        <label for="photoPositionX">横向裁切焦点</label>
+        <input id="photoPositionX" type="range" min="0" max="100" value="50">
+        <label for="photoPositionY">纵向裁切焦点</label>
+        <input id="photoPositionY" type="range" min="0" max="100" value="50">
+        <label for="elementRotate">元素旋转</label>
+        <input id="elementRotate" type="range" min="-30" max="30" value="0">
+        <label for="elementOpacity">元素透明度</label>
+        <input id="elementOpacity" type="range" min="20" max="100" value="100">
+        <button type="button" id="bringForward">上移一层</button>
+        <button type="button" id="sendBackward">下移一层</button>
+      </div>
+
+      <div class="group actions">
+        <label>装饰元素</label>
+        <button type="button" data-decoration="line">添加装饰线</button>
+        <button type="button" data-decoration="circle">添加圆环</button>
+        <button type="button" data-decoration="label">添加编号标签</button>
+        <button type="button" data-decoration="leaf">添加植物符号</button>
+        <button type="button" id="deleteElement">删除选中元素</button>
+        <label for="decorationColor">装饰颜色</label>
+        <input id="decorationColor" type="color" value="#47782e">
+      </div>
+
+      <div class="group actions">
+        <label>文字编辑</label>
+        <label for="textSize">字号</label>
+        <input id="textSize" type="range" min="10" max="64" value="18">
+        <label for="textColor">文字颜色</label>
+        <input id="textColor" type="color" value="#282b2b">
+        <label for="textAlign">对齐方式</label>
+        <select id="textAlign">
+          <option value="left">左对齐</option>
+          <option value="center">居中</option>
+          <option value="right">右对齐</option>
+        </select>
+        <button type="button" id="toggleBold">切换粗体</button>
+        <button type="button" id="toggleVertical">切换竖排</button>
+      </div>
+
+      <div class="group actions">
+        <label>项目管理</label>
+        <button type="button" id="undoAction">撤销</button>
+        <button type="button" id="redoAction">重做</button>
+        <button type="button" id="saveProject">保存到本机</button>
+        <button type="button" id="exportProject">导出项目文件</button>
+        <button type="button" id="importProject">导入项目文件</button>
+        <button type="button" id="copyShareLink">复制工具链接</button>
+        <button type="button" id="resetProject">恢复初始模板</button>
+        <span class="save-status" id="saveStatus">未保存</span>
+      </div>
+
+      <div class="group actions">
+        <button class="primary" type="button" id="downloadPng">导出 PNG 长图</button>
+        <button type="button" id="printPoster">打印 / 保存 PDF</button>
+        <button type="button" id="resetPhotos">清空已换图片</button>
+      </div>
+    </aside>
+
+    <main class="stage">
+      <div class="poster-wrap">
+        <article class="poster template-story theme-natural" id="poster">
+          <section class="hero">
+            <div class="photo" data-label="点击替换：酒店外观 / 民宿全景"></div>
+            <div class="hero-copy">
+              <div class="eyebrow" contenteditable="true">HOTEL & HOMESTAY</div>
+              <h1 class="serif" data-bind="hotelName" contenteditable="true">莳光山居</h1>
+              <p data-bind="slogan" contenteditable="true">住进山水之间，把日子过慢一点</p>
+            </div>
+          </section>
+
+          <section class="intro center">
+            <div class="eyebrow" contenteditable="true">The Stay</div>
+            <h2 class="serif" contenteditable="true">一处可以看见风景、也能安放心情的院落</h2>
+            <div class="rule"></div>
+            <p class="lead" contenteditable="true">从城市抵达山野，只需要一段车程。院子临近稻田、溪流与步道，白天看远山云影，傍晚在露台等一场落日，夜里枕着安静入眠。</p>
+            <div class="meta">
+              <span data-bind="location" contenteditable="true">浙江湖州 · 山野度假民宿</span>
+              <span contenteditable="true">客房 / 餐食 / 团建 / 旅拍</span>
+            </div>
+          </section>
+
+          <section class="section">
+            <h2 class="section-title serif" contenteditable="true">关于民宿</h2>
+            <div class="section-kicker" contenteditable="true">ABOUT THE PLACE</div>
+            <p class="lead" contenteditable="true">建筑保留本地院落的尺度，也加入更舒适的酒店化配置。公共空间连着庭院与露台，适合围坐聊天、阅读、下午茶，或者只是安静地看一会儿窗外。</p>
+            <div class="split">
+              <div class="photo" data-label="点击替换：周边山景"></div>
+              <div class="photo" data-label="点击替换：庭院花木"></div>
+            </div>
+            <p class="caption center" contenteditable="true">山风、花木、晨雾与晚霞，是入住期间最自然的背景。</p>
+          </section>
+
+          <section class="section">
+            <div class="wide-photo photo" data-label="点击替换：露台 / 餐厅 / 茶室"></div>
+            <div class="feature-block">
+              <div class="num">01</div>
+              <div>
+                <h3 class="serif" contenteditable="true">休闲庭院</h3>
+                <p contenteditable="true">院内设置户外桌椅、廊下休息区与观景平台。早餐后可以在这里晒太阳，傍晚适合小酌、聊天，团建包场时也能承接小型活动。</p>
+              </div>
+            </div>
+            <div class="gallery">
+              <div class="photo" data-label="点击替换：庭院"></div>
+              <div class="photo" data-label="点击替换：露台"></div>
+              <div class="photo" data-label="点击替换：餐吧"></div>
+            </div>
+          </section>
+
+          <section class="section">
+            <h2 class="section-title serif" contenteditable="true">客房空间</h2>
+            <div class="section-kicker" contenteditable="true">ROOMS & SUITES</div>
+            <p class="lead" contenteditable="true">房间以温润木色、自然织物和柔和灯光为主，保留足够的留白。窗外的山、田、湖或院景成为房间里最重要的装饰。</p>
+            <div class="room-card">
+              <div class="photo big" data-label="点击替换：主卧大图"></div>
+              <div class="stack">
+                <div class="photo" data-label="点击替换：浴室"></div>
+                <div class="photo" data-label="点击替换：窗景"></div>
+              </div>
+            </div>
+            <div class="gallery">
+              <div class="photo" data-label="点击替换：床品"></div>
+              <div class="photo" data-label="点击替换：茶台"></div>
+              <div class="photo" data-label="点击替换：洗漱"></div>
+            </div>
+          </section>
+
+          <section class="section">
+            <div class="feature-block">
+              <div class="num">02</div>
+              <div>
+                <h3 class="serif" contenteditable="true">配套服务</h3>
+                <p contenteditable="true">可根据实际情况填写：早餐、下午茶、接送、停车、亲子设施、宠物友好、会议投影、围炉煮茶、露营烧烤、旅拍预约等。</p>
+              </div>
+            </div>
+            <div class="amenities">
+              <div class="amenity" contenteditable="true">早餐<br>供应</div>
+              <div class="amenity" contenteditable="true">免费<br>停车</div>
+              <div class="amenity" contenteditable="true">观景<br>露台</div>
+              <div class="amenity" contenteditable="true">团建<br>包场</div>
+              <div class="amenity" contenteditable="true">亲子<br>友好</div>
+              <div class="amenity" contenteditable="true">茶室<br>咖啡</div>
+              <div class="amenity" contenteditable="true">周边<br>徒步</div>
+              <div class="amenity" contenteditable="true">旅拍<br>推荐</div>
+            </div>
+          </section>
+
+          <section class="section">
+            <h2 class="section-title serif" contenteditable="true">周边游玩</h2>
+            <div class="section-kicker" contenteditable="true">NEARBY GUIDE</div>
+            <p class="lead" contenteditable="true">从民宿出发，可以安排半日轻徒步、古镇散步、茶园拍照、湖边骑行，或前往当地餐馆品尝时令菜。这里适合两天一晚，也适合慢住几日。</p>
+            <div class="wide-photo photo" data-label="点击替换：周边景点大图"></div>
+            <div class="gallery">
+              <div class="photo" data-label="点击替换：古镇"></div>
+              <div class="photo" data-label="点击替换：茶园"></div>
+              <div class="photo" data-label="点击替换：夜景"></div>
+            </div>
+          </section>
+
+          <div class="quote">
+            <p class="serif" contenteditable="true">“把住宿从一晚睡眠，变成一段值得记住的旅程。”</p>
+          </div>
+
+          <section class="map-band">
+            <h3 class="serif" contenteditable="true">入住信息</h3>
+            <p contenteditable="true">地址：填写详细地址或区域定位<br>适合：情侣度假 / 家庭亲子 / 朋友聚会 / 公司团建<br>预订：电话、微信、OTA 店铺名称均可替换</p>
+          </section>
+
+          <footer class="footer">
+            <div class="eyebrow" contenteditable="true">BOOK YOUR STAY</div>
+            <h2 class="serif" data-bind="hotelName" contenteditable="true">莳光山居</h2>
+            <div class="rule"></div>
+            <p class="fine" contenteditable="true">欢迎把这份模板改成你的酒店或民宿介绍页：替换图片、调整文案、选择版式与色调，即可生成一张完整长图。</p>
+          </footer>
+        </article>
+      </div>
+    </main>
+  </div>
+
+  <input class="hidden-input" id="imageInput" type="file" accept="image/*">
+  <input class="hidden-input" id="imagesInput" type="file" accept="image/*" multiple>
+  <input class="hidden-input" id="projectInput" type="file" accept="application/json,.json">
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const poster = document.getElementById("poster");
+    const imageInput = document.getElementById("imageInput");
+    const imagesInput = document.getElementById("imagesInput");
+    const projectInput = document.getElementById("projectInput");
+    const saveStatus = document.getElementById("saveStatus");
+    const toast = document.getElementById("toast");
+    const storageKey = "hotel-long-poster-project-v2";
+    let activePhoto = null;
+    let activeElement = null;
+    let selectedBlock = null;
+    let selectedText = null;
+    let pendingImageTarget = null;
+    let history = [];
+    let historyIndex = -1;
+    let commitTimer = null;
+    let autoSaveTimer = null;
+    let isRestoring = false;
+    let initialProject = null;
+    let toastTimer = null;
+
+    function syncScale() {
+      const wrap = document.querySelector(".poster-wrap");
+      const scale = Math.min(1, wrap.clientWidth / 640);
+      document.documentElement.style.setProperty("--poster-scale", scale);
+      document.documentElement.style.setProperty("--poster-height", `${poster.scrollHeight}px`);
+    }
+
+    function showToast(message) {
+      clearTimeout(toastTimer);
+      toast.textContent = message;
+      toast.classList.add("show");
+      toastTimer = setTimeout(() => toast.classList.remove("show"), 1800);
+    }
+
+    function setBoundText(name, value) {
+      document.querySelectorAll(`[data-bind="${name}"]`).forEach((node) => {
+        node.textContent = value;
+      });
+    }
+
+    function cleanPosterHtml() {
+      const clone = poster.cloneNode(true);
+      clone.classList.remove("is-previewing");
+      clone.querySelectorAll(".is-selected-block, .is-selected-photo").forEach((node) => {
+        node.classList.remove("is-selected-block", "is-selected-photo");
+      });
+      clone.querySelectorAll(".is-selected-element").forEach((node) => node.classList.remove("is-selected-element"));
+      clone.querySelectorAll(".resize-handle").forEach((node) => node.remove());
+      return clone.innerHTML;
+    }
+
+    function getProjectState() {
+      return {
+        html: cleanPosterHtml(),
+        className: poster.className.replace(/\bis-previewing\b/g, "").trim(),
+        variables: {
+          accent: poster.style.getPropertyValue("--accent"),
+          accent2: poster.style.getPropertyValue("--accent-2"),
+          paper: poster.style.getPropertyValue("--paper")
+        },
+        fields: {
+          hotelName: document.getElementById("hotelName").value,
+          slogan: document.getElementById("slogan").value,
+          location: document.getElementById("location").value
+        }
+      };
+    }
+
+    function stateSignature(state) {
+      return JSON.stringify(state);
+    }
+
+    function restoreProject(state) {
+      if (!state) return;
+      isRestoring = true;
+      poster.innerHTML = state.html;
+      poster.className = state.className;
+      poster.style.setProperty("--accent", state.variables.accent || "");
+      poster.style.setProperty("--accent-2", state.variables.accent2 || "");
+      poster.style.setProperty("--paper", state.variables.paper || "");
+      Object.entries(state.fields || {}).forEach(([id, value]) => {
+        const input = document.getElementById(id);
+        if (input) input.value = value;
+      });
+      activePhoto = null;
+      activeElement = null;
+      selectedBlock = null;
+      selectedText = null;
+      markBlocks();
+      initializeEditableElements();
+      syncControlState();
+      syncScale();
+      isRestoring = false;
+    }
+
+    function commitState(options = {}) {
+      if (isRestoring) return;
+      clearTimeout(commitTimer);
+      const state = getProjectState();
+      const signature = stateSignature(state);
+      const current = history[historyIndex];
+      if (current && stateSignature(current) === signature) return;
+      history = history.slice(0, historyIndex + 1);
+      history.push(state);
+      if (history.length > 40) history.shift();
+      historyIndex = history.length - 1;
+      saveStatus.textContent = options.saved ? "已保存" : "有未保存修改";
+      if (!options.saved) {
+        clearTimeout(autoSaveTimer);
+        autoSaveTimer = setTimeout(() => {
+          try {
+            localStorage.setItem(storageKey, JSON.stringify(getProjectState()));
+            saveStatus.textContent = "已自动保存";
+          } catch (error) {
+            saveStatus.textContent = "图片过多，自动保存空间不足";
+          }
+        }, 1200);
+      }
+    }
+
+    function scheduleCommit() {
+      clearTimeout(commitTimer);
+      commitTimer = setTimeout(() => commitState(), 350);
+    }
+
+    function saveProject() {
+      const state = getProjectState();
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(state));
+        saveStatus.textContent = "已保存到本机";
+        commitState({ saved: true });
+        showToast("项目已保存到当前浏览器");
+      } catch (error) {
+        saveStatus.textContent = "图片过多，浏览器存储空间不足";
+        showToast("浏览器存储空间不足，请导出项目文件");
+      }
+    }
+
+    function downloadBlob(blob, filename) {
+      const link = document.createElement("a");
+      link.download = filename;
+      link.href = URL.createObjectURL(blob);
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+    }
+
+    function exportProjectFile() {
+      const payload = {
+        format: "hotel-poster-project",
+        version: 2,
+        exportedAt: new Date().toISOString(),
+        project: getProjectState()
+      };
+      const name = (document.getElementById("hotelName").value || "hotel-poster")
+        .replace(/[\\/:*?"<>|]/g, "-")
+        .trim();
+      downloadBlob(
+        new Blob([JSON.stringify(payload)], { type: "application/json;charset=utf-8" }),
+        `${name || "hotel-poster"}.json`
+      );
+      showToast("项目文件已导出");
+    }
+
+    function sanitizeProjectHtml(html) {
+      const template = document.createElement("template");
+      template.innerHTML = html;
+      template.content.querySelectorAll("script, iframe, object, embed, link, meta").forEach((node) => node.remove());
+      template.content.querySelectorAll("*").forEach((node) => {
+        Array.from(node.attributes).forEach((attribute) => {
+          const name = attribute.name.toLowerCase();
+          const value = attribute.value.trim().toLowerCase();
+          if (name.startsWith("on") || value.startsWith("javascript:")) node.removeAttribute(attribute.name);
+        });
+      });
+      return template.innerHTML;
+    }
+
+    function importProjectFile(file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const payload = JSON.parse(reader.result);
+          if (payload.format !== "hotel-poster-project" || !payload.project || typeof payload.project.html !== "string") {
+            throw new Error("invalid project");
+          }
+          const project = payload.project;
+          project.html = sanitizeProjectHtml(project.html);
+          restoreProject(project);
+          commitState();
+          saveProject();
+          showToast("项目文件已导入");
+        } catch (error) {
+          showToast("项目文件格式不正确");
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    async function copyShareLink() {
+      const url = new URL(location.href);
+      url.search = "";
+      url.hash = "";
+      try {
+        if (navigator.share) {
+          await navigator.share({
+            title: document.title,
+            text: "酒店民宿模块化长图编辑器",
+            url: url.href
+          });
+          showToast("分享面板已打开");
+          return;
+        }
+        await navigator.clipboard.writeText(url.href);
+        showToast("工具链接已复制");
+      } catch (error) {
+        const input = document.createElement("textarea");
+        input.value = url.href;
+        input.style.position = "fixed";
+        input.style.opacity = "0";
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand("copy");
+        input.remove();
+        showToast("工具链接已复制");
+      }
+    }
+
+    function loadSavedProject() {
+      const raw = localStorage.getItem(storageKey);
+      if (!raw) return false;
+      try {
+        restoreProject(JSON.parse(raw));
+        saveStatus.textContent = "已恢复本机项目";
+        return true;
+      } catch (error) {
+        saveStatus.textContent = "本机项目读取失败";
+        return false;
+      }
+    }
+
+    function undo() {
+      if (historyIndex <= 0) return;
+      historyIndex -= 1;
+      restoreProject(history[historyIndex]);
+      saveStatus.textContent = "已撤销";
+    }
+
+    function redo() {
+      if (historyIndex >= history.length - 1) return;
+      historyIndex += 1;
+      restoreProject(history[historyIndex]);
+      saveStatus.textContent = "已重做";
+    }
+
+    function makePhoto(label = "点击选中：替换或调节图片") {
+      const photo = document.createElement("div");
+      photo.className = "photo editable-element";
+      photo.dataset.label = label;
+      ensureResizeHandle(photo);
+      return photo;
+    }
+
+    function ensureResizeHandle(element) {
+      if (element.querySelector(":scope > .resize-handle")) return;
+      const handle = document.createElement("span");
+      handle.className = "resize-handle";
+      handle.setAttribute("aria-hidden", "true");
+      element.appendChild(handle);
+    }
+
+    function initializeEditableElements() {
+      poster.querySelectorAll(".photo").forEach((photo) => {
+        photo.classList.add("editable-element");
+        ensureResizeHandle(photo);
+      });
+      poster.querySelectorAll(".decoration").forEach((element) => {
+        element.classList.add("editable-element");
+        ensureResizeHandle(element);
+      });
+    }
+
+    function markBlocks() {
+      poster.querySelectorAll(".intro, .section, .quote, .map-band").forEach((block) => {
+        block.dataset.block = "true";
+      });
+    }
+
+    function selectBlock(block) {
+      if (!block || block === selectedBlock) return;
+      poster.querySelectorAll(".is-selected-block").forEach((node) => node.classList.remove("is-selected-block"));
+      selectedBlock = block;
+      selectedBlock.classList.add("is-selected-block");
+      document.getElementById("blockSpacing").value = parseInt(getComputedStyle(selectedBlock).paddingTop, 10) || 62;
+      const layout = ["single", "two", "three", "grid", "feature-left", "feature-top", "circle"]
+        .find((item) => selectedBlock.querySelector(`.layout-${item}`));
+      if (layout) document.getElementById("blockLayout").value = layout;
+      if (selectedBlock.querySelector(".layout-free")) document.getElementById("blockLayout").value = "free";
+      const freeCanvas = selectedBlock.querySelector(".layout-free");
+      document.getElementById("freeCanvasHeight").value = parseInt(freeCanvas && freeCanvas.style.getPropertyValue("--free-height"), 10) || 560;
+      document.getElementById("blockBackground").value = selectedBlock.style.getPropertyValue("--block-bg") || "#ffffff";
+      const bgStyle = ["solid", "fade", "band"].find((item) => selectedBlock.classList.contains(`block-bg-${item}`));
+      document.getElementById("blockBackgroundStyle").value = bgStyle || "none";
+    }
+
+    function selectPhoto(photo) {
+      poster.querySelectorAll(".is-selected-photo").forEach((node) => node.classList.remove("is-selected-photo"));
+      poster.querySelectorAll(".is-selected-element").forEach((node) => node.classList.remove("is-selected-element"));
+      activePhoto = photo;
+      activeElement = photo;
+      if (activePhoto) {
+        activePhoto.classList.add("is-selected-photo");
+        selectBlock(activePhoto.closest("[data-block]") || activePhoto.closest("section"));
+        const height = parseInt(getComputedStyle(activePhoto).height, 10);
+        const parentWidth = activePhoto.parentElement ? activePhoto.parentElement.getBoundingClientRect().width : activePhoto.getBoundingClientRect().width;
+        const widthPercent = parentWidth ? Math.round(activePhoto.getBoundingClientRect().width / parentWidth * 100) : 100;
+        document.getElementById("photoWidth").value = Math.max(30, Math.min(100, widthPercent));
+        document.getElementById("photoHeight").value = Math.max(90, Math.min(620, height || 220));
+        document.getElementById("photoRadius").value = parseInt(getComputedStyle(activePhoto).borderRadius, 10) || 0;
+        document.getElementById("photoFit").value = activePhoto.style.getPropertyValue("--photo-fit").trim() || "cover";
+        document.getElementById("photoPositionX").value = parseInt(activePhoto.style.getPropertyValue("--photo-x"), 10) || 50;
+        document.getElementById("photoPositionY").value = parseInt(activePhoto.style.getPropertyValue("--photo-y"), 10) || 50;
+        const shape = ["square", "wide", "portrait", "circle"].find((item) => activePhoto.classList.contains(`shape-${item}`));
+        document.getElementById("photoShape").value = shape || "custom";
+        syncElementControls(activePhoto);
+      }
+    }
+
+    function selectDecoration(element) {
+      poster.querySelectorAll(".is-selected-photo").forEach((node) => node.classList.remove("is-selected-photo"));
+      poster.querySelectorAll(".is-selected-element").forEach((node) => node.classList.remove("is-selected-element"));
+      activePhoto = null;
+      activeElement = element;
+      if (!element) return;
+      element.classList.add("is-selected-element");
+      selectBlock(element.closest("[data-block]"));
+      syncElementControls(element);
+      document.getElementById("decorationColor").value = rgbToHex(getComputedStyle(element).color);
+    }
+
+    function syncElementControls(element) {
+      document.getElementById("elementRotate").value = parseInt(element.style.getPropertyValue("--element-rotate"), 10) || 0;
+      document.getElementById("elementOpacity").value = Math.round((parseFloat(element.style.getPropertyValue("--element-opacity")) || 1) * 100);
+    }
+
+    function selectText(node) {
+      if (!node || !node.matches("[contenteditable='true']")) return;
+      selectedText = node;
+      const style = getComputedStyle(selectedText);
+      document.getElementById("textSize").value = Math.max(10, Math.min(64, parseInt(style.fontSize, 10) || 18));
+      document.getElementById("textColor").value = rgbToHex(style.color);
+      document.getElementById("textAlign").value = style.textAlign === "start" ? "left" : style.textAlign;
+    }
+
+    function rgbToHex(value) {
+      const match = value.match(/\d+/g);
+      if (!match || match.length < 3) return "#282b2b";
+      return `#${match.slice(0, 3).map((part) => Number(part).toString(16).padStart(2, "0")).join("")}`;
+    }
+
+    function syncControlState() {
+      document.querySelectorAll("[data-theme-picker] button").forEach((button) => {
+        button.classList.toggle("active", poster.classList.contains(button.dataset.theme));
+      });
+      document.querySelectorAll("[data-template-picker] button").forEach((button) => {
+        button.classList.toggle("active", poster.classList.contains(button.dataset.template));
+      });
+    }
+
+    function getInsertionPoint() {
+      return poster.querySelector(".quote") || poster.querySelector(".map-band") || poster.querySelector(".footer");
+    }
+
+    function createBlock(type) {
+      if (type === "gallery") {
+        const section = document.createElement("section");
+        section.className = "section";
+        section.dataset.block = "true";
+        section.innerHTML = `
+          <h2 class="section-title serif" contenteditable="true">新增多图板块</h2>
+          <div class="section-kicker" contenteditable="true">PHOTO STORY</div>
+          <p class="lead" contenteditable="true">这里可以放公共空间、餐饮、客房细节、周边体验等一组图片说明。</p>
+          <div class="gallery layout-gallery layout-grid"></div>
+          <p class="dynamic-note" contenteditable="true">点击图片后可替换、调高度、圆角和形状。</p>`;
+        const gallery = section.querySelector(".gallery");
+        ["图片 1", "图片 2", "图片 3", "图片 4", "图片 5", "图片 6"].forEach((label) => gallery.appendChild(makePhoto(`点击选中：${label}`)));
+        return section;
+      }
+
+      if (type === "room") {
+        const section = document.createElement("section");
+        section.className = "section";
+        section.dataset.block = "true";
+        section.innerHTML = `
+          <h2 class="section-title serif" contenteditable="true">新增客房板块</h2>
+          <div class="section-kicker" contenteditable="true">ROOM DETAILS</div>
+          <p class="lead" contenteditable="true">填写房型、面积、床型、景观、适住人数和亮点配置。</p>
+          <div class="room-card">
+            <div class="photo big" data-label="点击选中：客房主图"></div>
+            <div class="stack">
+              <div class="photo" data-label="点击选中：浴室 / 洗漱"></div>
+              <div class="photo" data-label="点击选中：窗景 / 细节"></div>
+            </div>
+          </div>`;
+        return section;
+      }
+
+      const section = document.createElement("section");
+      section.className = "section";
+      section.dataset.block = "true";
+      section.innerHTML = `
+        <h2 class="section-title serif" contenteditable="true">新增图文板块</h2>
+        <div class="section-kicker" contenteditable="true">NEW SECTION</div>
+        <p class="lead" contenteditable="true">这里填写一个主题介绍，比如餐饮、院落、会议团建、亲子活动、周边路线或品牌故事。</p>
+        <div class="wide-photo photo" data-label="点击选中：新增图片"></div>`;
+      return section;
+    }
+
+    function addPhotoToBlock() {
+      const block = selectedBlock || poster.querySelector(".section");
+      if (!block) return;
+      const container = ensureLayoutGallery(block);
+      if (!container.className.match(/layout-(single|two|three|grid|feature-left|feature-top|circle)/)) {
+        container.classList.add("layout-grid");
+      }
+      const count = container.querySelectorAll(".photo").length + 1;
+      const photo = makePhoto(`点击选中：新增图片 ${count}`);
+      container.appendChild(photo);
+      if (container.classList.contains("layout-free")) {
+        photo.style.left = `${40 + ((count - 1) * 47) % 280}px`;
+        photo.style.top = `${30 + ((count - 1) * 61) % 300}px`;
+        photo.style.width = "210px";
+        photo.style.height = "160px";
+        photo.dataset.customHeight = "true";
+        photo.style.setProperty("--photo-h", "160px");
+      }
+      selectPhoto(photo);
+      syncScale();
+      commitState();
+    }
+
+    function duplicateSelectedBlock() {
+      if (!selectedBlock) return;
+      const copy = selectedBlock.cloneNode(true);
+      copy.classList.remove("is-selected-block");
+      copy.querySelectorAll(".is-selected-photo").forEach((node) => node.classList.remove("is-selected-photo"));
+      selectedBlock.after(copy);
+      markBlocks();
+      selectBlock(copy);
+      syncScale();
+      commitState();
+    }
+
+    function deleteSelectedBlock() {
+      if (!selectedBlock) return;
+      const next = selectedBlock.nextElementSibling && selectedBlock.nextElementSibling.matches("[data-block]")
+        ? selectedBlock.nextElementSibling
+        : selectedBlock.previousElementSibling;
+      selectedBlock.remove();
+      selectedBlock = null;
+      if (next && next.matches("[data-block]")) selectBlock(next);
+      syncScale();
+      commitState();
+    }
+
+    function moveSelectedBlock(direction) {
+      if (!selectedBlock) return;
+      if (direction < 0) {
+        const previous = selectedBlock.previousElementSibling;
+        if (!previous || !previous.matches("[data-block]")) return;
+        previous.before(selectedBlock);
+      } else {
+        const next = selectedBlock.nextElementSibling;
+        if (!next || !next.matches("[data-block]")) return;
+        next.after(selectedBlock);
+      }
+      syncScale();
+      commitState();
+    }
+
+    function ensureLayoutGallery(block) {
+      let gallery = block.querySelector(".layout-gallery");
+      if (gallery) return gallery;
+      gallery = block.querySelector(".gallery");
+      if (gallery) {
+        gallery.classList.add("layout-gallery");
+        gallery.classList.remove("cols-2", "cols-3", "cols-4");
+        return gallery;
+      }
+      gallery = document.createElement("div");
+      gallery.className = "layout-gallery";
+      const photos = Array.from(block.querySelectorAll(".photo"));
+      photos.forEach((photo) => gallery.appendChild(photo));
+      block.appendChild(gallery);
+      block.querySelectorAll(".room-card, .stack, .split").forEach((container) => {
+        if (!container.querySelector(".photo")) container.remove();
+      });
+      return gallery;
+    }
+
+    function applyBlockLayout(layout) {
+      if (!selectedBlock) return;
+      const gallery = ensureLayoutGallery(selectedBlock);
+      if (layout === "free") {
+        const galleryRect = gallery.getBoundingClientRect();
+        const photos = Array.from(gallery.querySelectorAll(".photo"));
+        const positions = photos.map((photo) => {
+          const rect = photo.getBoundingClientRect();
+          return {
+            left: rect.left - galleryRect.left,
+            top: rect.top - galleryRect.top,
+            width: rect.width,
+            height: rect.height
+          };
+        });
+        gallery.classList.remove(
+          "layout-single", "layout-two", "layout-three", "layout-grid",
+          "layout-feature-left", "layout-feature-top", "layout-circle"
+        );
+        gallery.classList.add("layout-free", "free-canvas");
+        gallery.style.setProperty("--free-height", `${Math.max(560, Math.ceil(galleryRect.height))}px`);
+        photos.forEach((photo, index) => {
+          const position = positions[index];
+          photo.style.left = `${Math.max(0, position.left)}px`;
+          photo.style.top = `${Math.max(0, position.top)}px`;
+          photo.style.width = `${Math.max(120, position.width)}px`;
+          photo.style.height = `${Math.max(90, position.height)}px`;
+          photo.style.right = "auto";
+          photo.style.justifySelf = "auto";
+          photo.dataset.customHeight = "true";
+          photo.style.setProperty("--photo-h", `${Math.max(90, position.height)}px`);
+        });
+        document.getElementById("freeCanvasHeight").value = Math.max(560, Math.ceil(galleryRect.height));
+        commitState();
+        syncScale();
+        return;
+      }
+      gallery.classList.remove(
+        "layout-single", "layout-two", "layout-three", "layout-grid",
+        "layout-feature-left", "layout-feature-top", "layout-circle", "layout-free", "free-canvas"
+      );
+      gallery.style.removeProperty("--free-height");
+      gallery.querySelectorAll(".photo").forEach((photo) => {
+        photo.style.removeProperty("left");
+        photo.style.removeProperty("top");
+        photo.style.removeProperty("right");
+        photo.style.removeProperty("width");
+        photo.style.removeProperty("height");
+        photo.style.removeProperty("justify-self");
+        photo.style.removeProperty("--photo-h");
+        delete photo.dataset.customHeight;
+      });
+      gallery.classList.add(`layout-${layout}`);
+      commitState();
+      syncScale();
+    }
+
+    function applyPhotoShape(shape) {
+      if (!activePhoto) return;
+      activePhoto.classList.remove("shape-square", "shape-wide", "shape-portrait", "shape-circle");
+      activePhoto.style.removeProperty("--photo-aspect");
+      if (shape === "square") {
+        activePhoto.classList.add("shape-square");
+        activePhoto.style.setProperty("--photo-aspect", "1 / 1");
+      }
+      if (shape === "wide") {
+        activePhoto.classList.add("shape-wide");
+        activePhoto.style.setProperty("--photo-aspect", "16 / 9");
+      }
+      if (shape === "portrait") {
+        activePhoto.classList.add("shape-portrait");
+        activePhoto.style.setProperty("--photo-aspect", "3 / 4");
+      }
+      if (shape === "circle") {
+        activePhoto.classList.add("shape-circle");
+      }
+    }
+
+    function getSelectedEditableElement() {
+      return activeElement && poster.contains(activeElement) ? activeElement : null;
+    }
+
+    function createDecoration(type) {
+      const block = selectedBlock || poster.querySelector(".section");
+      if (!block) return;
+      let layer = block.querySelector(":scope > .decoration-layer");
+      if (!layer) {
+        layer = document.createElement("div");
+        layer.className = "decoration-layer";
+        block.appendChild(layer);
+      }
+      const element = document.createElement("div");
+      element.className = `decoration decoration-${type} editable-element`;
+      element.dataset.decoration = type;
+      element.style.left = "60px";
+      element.style.top = "42px";
+      element.style.color = document.getElementById("decorationColor").value;
+      if (type === "label") {
+        element.textContent = "01";
+        element.contentEditable = "true";
+      }
+      ensureResizeHandle(element);
+      layer.appendChild(element);
+      selectDecoration(element);
+      commitState();
+    }
+
+    function changeLayer(delta) {
+      const element = getSelectedEditableElement();
+      if (!element) return;
+      const current = parseInt(getComputedStyle(element).zIndex, 10) || 1;
+      element.style.zIndex = String(Math.max(1, current + delta));
+      commitState();
+    }
+
+    function deleteSelectedElement() {
+      const element = getSelectedEditableElement();
+      if (!element) return;
+      if (element.classList.contains("photo")) {
+        const next = element.parentElement && element.parentElement.querySelector(".photo:not(.is-selected-photo)");
+        element.remove();
+        activePhoto = null;
+        activeElement = null;
+        if (next) selectPhoto(next);
+      } else {
+        const layer = element.parentElement;
+        element.remove();
+        activeElement = null;
+        if (layer && !layer.querySelector(".decoration")) layer.remove();
+      }
+      syncScale();
+      commitState();
+    }
+
+    function startElementInteraction(event) {
+      const handle = event.target.closest(".resize-handle");
+      const element = event.target.closest(".decoration, .layout-free .photo");
+      if (!element || !poster.contains(element)) return;
+      const isResize = Boolean(handle);
+      if (element.classList.contains("photo")) selectPhoto(element);
+      else selectDecoration(element);
+      event.preventDefault();
+
+      const startX = event.clientX;
+      const startY = event.clientY;
+      const startLeft = parseFloat(element.style.left) || element.offsetLeft;
+      const startTop = parseFloat(element.style.top) || element.offsetTop;
+      const startWidth = element.getBoundingClientRect().width;
+      const startHeight = element.getBoundingClientRect().height;
+      const scale = poster.getBoundingClientRect().width / 640 || 1;
+      const container = element.offsetParent;
+      const maxWidth = container ? container.clientWidth : 640;
+      const maxHeight = container ? container.clientHeight : 1000;
+
+      function onMove(moveEvent) {
+        const dx = (moveEvent.clientX - startX) / scale;
+        const dy = (moveEvent.clientY - startY) / scale;
+        if (isResize) {
+          const width = Math.max(40, Math.min(maxWidth - startLeft, startWidth / scale + dx));
+          const height = Math.max(30, Math.min(maxHeight - startTop, startHeight / scale + dy));
+          element.style.width = `${width}px`;
+          element.style.height = `${height}px`;
+          if (element.classList.contains("photo")) {
+            element.dataset.customHeight = "true";
+            element.style.setProperty("--photo-h", `${height}px`);
+          }
+        } else {
+          const width = element.offsetWidth;
+          const height = element.offsetHeight;
+          element.style.left = `${Math.max(0, Math.min(maxWidth - width, startLeft + dx))}px`;
+          element.style.top = `${Math.max(0, Math.min(maxHeight - height, startTop + dy))}px`;
+          element.style.right = "auto";
+        }
+      }
+
+      function onEnd() {
+        removeEventListener("pointermove", onMove);
+        removeEventListener("pointerup", onEnd);
+        commitState();
+      }
+
+      addEventListener("pointermove", onMove);
+      addEventListener("pointerup", onEnd);
+    }
+
+    document.getElementById("hotelName").addEventListener("input", (event) => {
+      setBoundText("hotelName", event.target.value || "酒店民宿名称");
+      scheduleCommit();
+    });
+
+    document.getElementById("slogan").addEventListener("input", (event) => {
+      setBoundText("slogan", event.target.value || "在这里写一句最打动人的主标语");
+      scheduleCommit();
+    });
+
+    document.getElementById("location").addEventListener("input", (event) => {
+      setBoundText("location", event.target.value || "城市区域 · 酒店民宿类型");
+      scheduleCommit();
+    });
+
+    document.querySelector("[data-theme-picker]").addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-theme]");
+      if (!button) return;
+      poster.classList.remove("theme-natural", "theme-urban");
+      poster.classList.add(button.dataset.theme);
+      poster.style.removeProperty("--accent");
+      poster.style.removeProperty("--accent-2");
+      poster.style.removeProperty("--paper");
+      syncControlState();
+      commitState();
+    });
+
+    document.querySelector("[data-template-picker]").addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-template]");
+      if (!button) return;
+      document.querySelectorAll("[data-template-picker] button").forEach((item) => item.classList.remove("active"));
+      button.classList.add("active");
+      poster.classList.remove("template-story", "template-magazine", "template-guide");
+      poster.classList.add(button.dataset.template);
+      syncScale();
+      commitState();
+    });
+
+    document.querySelector("[data-palette-picker]").addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-palette]");
+      if (!button) return;
+      document.querySelectorAll("[data-palette-picker] button").forEach((item) => item.classList.remove("active"));
+      button.classList.add("active");
+      const [accent, accent2, paper] = button.dataset.palette.split(",");
+      poster.style.setProperty("--accent", accent);
+      poster.style.setProperty("--accent-2", accent2);
+      poster.style.setProperty("--paper", paper);
+      commitState();
+    });
+
+    poster.addEventListener("click", (event) => {
+      const decoration = event.target.closest(".decoration");
+      if (decoration && poster.contains(decoration)) {
+        selectDecoration(decoration);
+        return;
+      }
+      const text = event.target.closest("[contenteditable='true']");
+      if (text && poster.contains(text)) selectText(text);
+      const photo = event.target.closest(".photo");
+      if (photo && poster.contains(photo)) {
+        selectPhoto(photo);
+        return;
+      }
+      const block = event.target.closest("[data-block]");
+      if (block && poster.contains(block)) {
+        selectBlock(block);
+      }
+    });
+
+    poster.addEventListener("pointerdown", startElementInteraction);
+
+    poster.addEventListener("input", (event) => {
+      if (event.target.matches("[contenteditable='true']")) {
+        selectText(event.target);
+        scheduleCommit();
+      }
+    });
+
+    imageInput.addEventListener("change", (event) => {
+      const file = event.target.files && event.target.files[0];
+      const target = pendingImageTarget || activePhoto;
+      if (!file || !target) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        let img = target.querySelector("img");
+        if (!img) {
+          img = document.createElement("img");
+          img.alt = target.dataset.label || "替换图片";
+          target.appendChild(img);
+        }
+        img.src = reader.result;
+        commitState();
+      };
+      reader.readAsDataURL(file);
+      imageInput.value = "";
+      pendingImageTarget = null;
+    });
+
+    imagesInput.addEventListener("change", (event) => {
+      const files = Array.from(event.target.files || []);
+      if (!files.length) return;
+      const block = selectedBlock || poster.querySelector(".section");
+      if (!block) return;
+      const gallery = ensureLayoutGallery(block);
+      if (!gallery.className.match(/layout-(single|two|three|grid|feature-left|feature-top|circle)/)) {
+        gallery.classList.add("layout-grid");
+      }
+      let completed = 0;
+      files.forEach((file, index) => {
+        const photo = makePhoto(`批量图片 ${gallery.querySelectorAll(".photo").length + 1}`);
+        gallery.appendChild(photo);
+        const reader = new FileReader();
+        reader.onload = () => {
+          const img = document.createElement("img");
+          img.alt = file.name || `批量图片 ${index + 1}`;
+          img.src = reader.result;
+          photo.appendChild(img);
+          completed += 1;
+          if (completed === files.length) {
+            selectPhoto(photo);
+            commitState();
+            syncScale();
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+      imagesInput.value = "";
+    });
+
+    document.querySelectorAll("[data-add-block]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const block = createBlock(button.dataset.addBlock);
+        poster.insertBefore(block, getInsertionPoint());
+        markBlocks();
+        selectBlock(block);
+        syncScale();
+        commitState();
+      });
+    });
+
+    document.getElementById("duplicateBlock").addEventListener("click", duplicateSelectedBlock);
+    document.getElementById("deleteBlock").addEventListener("click", deleteSelectedBlock);
+    document.getElementById("addPhoto").addEventListener("click", addPhotoToBlock);
+    document.getElementById("addPhotos").addEventListener("click", () => imagesInput.click());
+    document.getElementById("moveBlockUp").addEventListener("click", () => moveSelectedBlock(-1));
+    document.getElementById("moveBlockDown").addEventListener("click", () => moveSelectedBlock(1));
+    document.getElementById("blockLayout").addEventListener("change", (event) => applyBlockLayout(event.target.value));
+    document.getElementById("blockSpacing").addEventListener("input", (event) => {
+      if (!selectedBlock) return;
+      selectedBlock.style.paddingTop = `${event.target.value}px`;
+      selectedBlock.style.paddingBottom = `${Math.round(event.target.value / 2)}px`;
+      syncScale();
+      scheduleCommit();
+    });
+
+    document.getElementById("freeCanvasHeight").addEventListener("input", (event) => {
+      if (!selectedBlock) return;
+      const canvas = selectedBlock.querySelector(".layout-free");
+      if (!canvas) return;
+      canvas.style.setProperty("--free-height", `${event.target.value}px`);
+      scheduleCommit();
+      syncScale();
+    });
+
+    document.getElementById("blockBackground").addEventListener("input", (event) => {
+      if (!selectedBlock) return;
+      selectedBlock.style.setProperty("--block-bg", event.target.value);
+      if (!selectedBlock.className.match(/block-bg-(solid|fade|band)/)) {
+        selectedBlock.classList.add("block-bg-solid");
+        document.getElementById("blockBackgroundStyle").value = "solid";
+      }
+      scheduleCommit();
+    });
+
+    document.getElementById("blockBackgroundStyle").addEventListener("change", (event) => {
+      if (!selectedBlock) return;
+      selectedBlock.classList.remove("block-bg-solid", "block-bg-fade", "block-bg-band");
+      if (event.target.value !== "none") selectedBlock.classList.add(`block-bg-${event.target.value}`);
+      commitState();
+    });
+
+    document.getElementById("replacePhoto").addEventListener("click", () => {
+      if (!activePhoto) return;
+      pendingImageTarget = activePhoto;
+      imageInput.click();
+    });
+
+    document.getElementById("deletePhoto").addEventListener("click", () => {
+      if (!activePhoto) return;
+      deleteSelectedElement();
+    });
+
+    document.getElementById("photoHeight").addEventListener("input", (event) => {
+      if (!activePhoto) return;
+      activePhoto.dataset.customHeight = "true";
+      activePhoto.style.setProperty("--photo-h", `${event.target.value}px`);
+      syncScale();
+      scheduleCommit();
+    });
+
+    document.getElementById("photoWidth").addEventListener("input", (event) => {
+      if (!activePhoto) return;
+      activePhoto.style.width = `${event.target.value}%`;
+      activePhoto.style.justifySelf = event.target.value === "100" ? "stretch" : "center";
+      scheduleCommit();
+    });
+
+    document.getElementById("photoRadius").addEventListener("input", (event) => {
+      if (!activePhoto) return;
+      activePhoto.style.setProperty("--photo-radius", `${event.target.value}px`);
+      scheduleCommit();
+    });
+
+    document.getElementById("photoShape").addEventListener("change", (event) => {
+      applyPhotoShape(event.target.value);
+      syncScale();
+      commitState();
+    });
+
+    document.getElementById("photoFit").addEventListener("change", (event) => {
+      if (!activePhoto) return;
+      activePhoto.style.setProperty("--photo-fit", event.target.value);
+      commitState();
+    });
+
+    document.getElementById("photoPositionX").addEventListener("input", (event) => {
+      if (!activePhoto) return;
+      activePhoto.style.setProperty("--photo-x", `${event.target.value}%`);
+      scheduleCommit();
+    });
+
+    document.getElementById("photoPositionY").addEventListener("input", (event) => {
+      if (!activePhoto) return;
+      activePhoto.style.setProperty("--photo-y", `${event.target.value}%`);
+      scheduleCommit();
+    });
+
+    document.getElementById("elementRotate").addEventListener("input", (event) => {
+      const element = getSelectedEditableElement();
+      if (!element) return;
+      element.style.setProperty("--element-rotate", `${event.target.value}deg`);
+      scheduleCommit();
+    });
+
+    document.getElementById("elementOpacity").addEventListener("input", (event) => {
+      const element = getSelectedEditableElement();
+      if (!element) return;
+      element.style.setProperty("--element-opacity", String(event.target.value / 100));
+      scheduleCommit();
+    });
+
+    document.getElementById("bringForward").addEventListener("click", () => changeLayer(1));
+    document.getElementById("sendBackward").addEventListener("click", () => changeLayer(-1));
+
+    document.querySelectorAll("[data-decoration]").forEach((button) => {
+      button.addEventListener("click", () => createDecoration(button.dataset.decoration));
+    });
+
+    document.getElementById("decorationColor").addEventListener("input", (event) => {
+      const element = getSelectedEditableElement();
+      if (!element || !element.classList.contains("decoration")) return;
+      element.style.color = event.target.value;
+      scheduleCommit();
+    });
+
+    document.getElementById("deleteElement").addEventListener("click", deleteSelectedElement);
+
+    document.getElementById("textSize").addEventListener("input", (event) => {
+      if (!selectedText) return;
+      selectedText.style.fontSize = `${event.target.value}px`;
+      scheduleCommit();
+    });
+
+    document.getElementById("textColor").addEventListener("input", (event) => {
+      if (!selectedText) return;
+      selectedText.style.color = event.target.value;
+      scheduleCommit();
+    });
+
+    document.getElementById("textAlign").addEventListener("change", (event) => {
+      if (!selectedText) return;
+      selectedText.style.textAlign = event.target.value;
+      commitState();
+    });
+
+    document.getElementById("toggleBold").addEventListener("click", () => {
+      if (!selectedText) return;
+      const current = parseInt(getComputedStyle(selectedText).fontWeight, 10);
+      selectedText.style.fontWeight = current >= 600 ? "400" : "700";
+      commitState();
+    });
+
+    document.getElementById("toggleVertical").addEventListener("click", () => {
+      if (!selectedText) return;
+      selectedText.style.writingMode = selectedText.style.writingMode === "vertical-rl" ? "horizontal-tb" : "vertical-rl";
+      commitState();
+      syncScale();
+    });
+
+    document.getElementById("resetPhotos").addEventListener("click", () => {
+      document.querySelectorAll(".photo img").forEach((img) => img.remove());
+      commitState();
+    });
+
+    document.getElementById("undoAction").addEventListener("click", undo);
+    document.getElementById("redoAction").addEventListener("click", redo);
+    document.getElementById("saveProject").addEventListener("click", saveProject);
+    document.getElementById("exportProject").addEventListener("click", exportProjectFile);
+    document.getElementById("importProject").addEventListener("click", () => projectInput.click());
+    document.getElementById("copyShareLink").addEventListener("click", copyShareLink);
+    projectInput.addEventListener("change", (event) => {
+      const file = event.target.files && event.target.files[0];
+      if (file) importProjectFile(file);
+      projectInput.value = "";
+    });
+    document.getElementById("resetProject").addEventListener("click", () => {
+      if (!initialProject) return;
+      restoreProject(initialProject);
+      localStorage.removeItem(storageKey);
+      history = [getProjectState()];
+      historyIndex = 0;
+      saveStatus.textContent = "已恢复初始模板";
+      showToast("已恢复初始模板");
+    });
+
+    document.getElementById("mobilePanelToggle").addEventListener("click", () => {
+      document.body.classList.toggle("mobile-panel-open");
+    });
+
+    document.getElementById("printPoster").addEventListener("click", () => {
+      window.print();
+    });
+
+    if (new URLSearchParams(location.search).has("preview")) {
+      document.body.classList.add("preview-mode");
+    }
+
+    async function exportPng() {
+      const clone = poster.cloneNode(true);
+      clone.classList.add("is-previewing");
+      clone.querySelectorAll("[contenteditable]").forEach((node) => node.removeAttribute("contenteditable"));
+      clone.querySelectorAll(".is-selected-block, .is-selected-photo, .is-selected-element").forEach((node) => {
+        node.classList.remove("is-selected-block", "is-selected-photo", "is-selected-element");
+      });
+      clone.querySelectorAll(".resize-handle").forEach((node) => node.remove());
+      const css = Array.from(document.styleSheets)
+        .map((sheet) => Array.from(sheet.cssRules).map((rule) => rule.cssText).join("\n"))
+        .join("\n");
+      const width = 640;
+      const height = Math.ceil(poster.getBoundingClientRect().height);
+      const html = new XMLSerializer().serializeToString(clone);
+      const svg = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
+          <foreignObject width="100%" height="100%">
+            <div xmlns="http://www.w3.org/1999/xhtml">
+              <style>${css}</style>${html}
+            </div>
+          </foreignObject>
+        </svg>`;
+      const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml;charset=utf-8" }));
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = getComputedStyle(poster).getPropertyValue("--paper").trim() || "#fbfaf7";
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(img, 0, 0);
+        URL.revokeObjectURL(url);
+        const link = document.createElement("a");
+        link.download = "hotel-homestay-long-poster.png";
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+      };
+      img.src = url;
+    }
+
+    document.getElementById("downloadPng").addEventListener("click", exportPng);
+    document.addEventListener("keydown", (event) => {
+      if (!(event.metaKey || event.ctrlKey)) return;
+      if (event.key.toLowerCase() === "z" && !event.shiftKey) {
+        event.preventDefault();
+        undo();
+      }
+      if ((event.key.toLowerCase() === "z" && event.shiftKey) || event.key.toLowerCase() === "y") {
+        event.preventDefault();
+        redo();
+      }
+      if (event.key.toLowerCase() === "s") {
+        event.preventDefault();
+        saveProject();
+      }
+    });
+    if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+      addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(() => {}));
+    }
+    addEventListener("resize", syncScale);
+    new ResizeObserver(syncScale).observe(poster);
+    markBlocks();
+    initializeEditableElements();
+    initialProject = getProjectState();
+    loadSavedProject();
+    history = [getProjectState()];
+    historyIndex = 0;
+    syncControlState();
+    syncScale();
+  </script>
+</body>
+</html>
